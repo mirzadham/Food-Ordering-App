@@ -2,13 +2,17 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 
-/// API Service for making authenticated HTTP requests to the backend
+/// API Service for making authenticated HTTP requests to Cloud Functions
 class ApiService {
-  // Android emulator localhost
-  static const String baseUrl = 'http://10.0.2.2:8080';
-
-  // For iOS simulator, use: http://localhost:8080
-  // For physical device, use your computer's local IP
+  // Cloud Functions URLs (deployed to asia-southeast1)
+  static const String _menuUrl =
+      'https://get-menu-834841459632.asia-southeast1.run.app';
+  static const String _placeOrderUrl =
+      'https://place-order-834841459632.asia-southeast1.run.app';
+  static const String _getOrdersUrl =
+      'https://get-orders-834841459632.asia-southeast1.run.app';
+  static const String _healthCheckUrl =
+      'https://health-check-834841459632.asia-southeast1.run.app';
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -30,26 +34,23 @@ class ApiService {
     };
   }
 
-  /// Makes an authenticated GET request
-  Future<ApiResponse> get(String endpoint) async {
+  /// Makes an authenticated GET request to a URL
+  Future<ApiResponse> _get(String url) async {
     try {
       final headers = await _getAuthHeaders();
-      final response = await http.get(
-        Uri.parse('$baseUrl$endpoint'),
-        headers: headers,
-      );
+      final response = await http.get(Uri.parse(url), headers: headers);
       return ApiResponse.fromHttpResponse(response);
     } catch (e) {
       return ApiResponse(success: false, statusCode: 0, error: e.toString());
     }
   }
 
-  /// Makes an authenticated POST request
-  Future<ApiResponse> post(String endpoint, Map<String, dynamic> body) async {
+  /// Makes an authenticated POST request to a URL
+  Future<ApiResponse> _post(String url, Map<String, dynamic> body) async {
     try {
       final headers = await _getAuthHeaders();
       final response = await http.post(
-        Uri.parse('$baseUrl$endpoint'),
+        Uri.parse(url),
         headers: headers,
         body: jsonEncode(body),
       );
@@ -58,6 +59,21 @@ class ApiService {
       return ApiResponse(success: false, statusCode: 0, error: e.toString());
     }
   }
+
+  // ==================== API Methods ====================
+
+  /// Get menu items
+  Future<ApiResponse> getMenu() => _get(_menuUrl);
+
+  /// Place an order
+  Future<ApiResponse> placeOrder(Map<String, dynamic> orderData) =>
+      _post(_placeOrderUrl, orderData);
+
+  /// Get user's orders
+  Future<ApiResponse> getOrders() => _get(_getOrdersUrl);
+
+  /// Health check (no auth required, but included for consistency)
+  Future<ApiResponse> healthCheck() => _get(_healthCheckUrl);
 }
 
 /// Response wrapper for API calls

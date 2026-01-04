@@ -10,7 +10,7 @@ class OrderRepository {
 
   /// Fetches menu items from the backend
   Future<List<MenuItem>> fetchMenu() async {
-    final response = await _apiService.get('/menu');
+    final response = await _apiService.getMenu();
 
     if (!response.success) {
       throw Exception(response.error ?? 'Failed to fetch menu');
@@ -51,7 +51,7 @@ class OrderRepository {
       if (encryptedPhone != null) 'encryptedPhone': encryptedPhone,
     };
 
-    final response = await _apiService.post('/placeOrder', orderPayload);
+    final response = await _apiService.placeOrder(orderPayload);
 
     if (!response.success) {
       throw Exception(response.error ?? 'Failed to place order');
@@ -68,7 +68,7 @@ class OrderRepository {
 
   /// Fetches user's order history from the backend
   Future<List<Order>> fetchOrders() async {
-    final response = await _apiService.get('/orders');
+    final response = await _apiService.getOrders();
 
     if (!response.success) {
       throw Exception(response.error ?? 'Failed to fetch orders');
