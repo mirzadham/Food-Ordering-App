@@ -4,15 +4,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 /// API Service for making authenticated HTTP requests to Cloud Functions
 class ApiService {
-  // Cloud Functions URLs (deployed to asia-southeast1)
+  // Cloud Functions URLs (deployed to asia-southeast1 in food-ordering-app-e6c37)
   static const String _menuUrl =
-      'https://get-menu-834841459632.asia-southeast1.run.app';
+      'https://asia-southeast1-food-ordering-app-e6c37.cloudfunctions.net/getMenu';
   static const String _placeOrderUrl =
-      'https://place-order-834841459632.asia-southeast1.run.app';
+      'https://asia-southeast1-food-ordering-app-e6c37.cloudfunctions.net/placeOrder';
   static const String _getOrdersUrl =
-      'https://get-orders-834841459632.asia-southeast1.run.app';
+      'https://asia-southeast1-food-ordering-app-e6c37.cloudfunctions.net/getOrders';
   static const String _healthCheckUrl =
-      'https://health-check-834841459632.asia-southeast1.run.app';
+      'https://asia-southeast1-food-ordering-app-e6c37.cloudfunctions.net/healthCheck';
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
+import 'firebase_options.dart';
 import 'viewmodels/menu_viewmodel.dart';
 import 'views/menu_screen.dart';
 import 'utils/encryption_helper.dart';
@@ -9,8 +10,8 @@ import 'utils/encryption_helper.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp();
+  // Initialize Firebase with platform-specific options
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Validate encryption is working
   if (EncryptionHelper.validateEncryption()) {
