@@ -26,8 +26,8 @@ class OrderRepository {
   /// [address] - Delivery address (will be encrypted before sending)
   /// [phone] - Phone number (optional, will be encrypted if provided)
   ///
-  /// Returns a record containing orderId and queueNumber on success
-  Future<({String orderId, int queueNumber})> placeOrder({
+  /// Returns an OrderPlacementResult containing orderId and queueNumber on success
+  Future<OrderPlacementResult> placeOrder({
     required List<CartItem> items,
     required double total,
     required String address,
@@ -38,10 +38,6 @@ class OrderRepository {
     final encryptedPhone = phone != null
         ? EncryptionHelper.encryptData(phone)
         : null;
-
-    // Log encryption for debugging (remove in production)
-    print('📦 Original Address: $address');
-    print('🔐 Encrypted Address: $encryptedAddress');
 
     // Prepare order payload
     final orderPayload = {
@@ -68,8 +64,7 @@ class OrderRepository {
       throw Exception('No queue number received from server');
     }
 
-    print('✅ Order placed successfully: $orderId (Queue #$queueNumber)');
-    return (orderId: orderId, queueNumber: queueNumber);
+    return OrderPlacementResult(orderId: orderId, queueNumber: queueNumber);
   }
 
   /// Fetches user's order history from the backend
@@ -84,3 +79,14 @@ class OrderRepository {
     return ordersData.map((item) => Order.fromJson(item)).toList();
   }
 }
+
+/// Result of placing an order
+class OrderPlacementResult {
+  final String orderId;
+  final int queueNumber;
+
+  OrderPlacementResult({
+    required this.orderId,
+    required this.queueNumber,
+  });
+
