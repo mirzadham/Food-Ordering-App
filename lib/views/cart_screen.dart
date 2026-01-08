@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/menu_viewmodel.dart';
 import '../models/order.dart';
+import 'order_status_screen.dart';
 
 /// Cart Screen - Shows cart items and handles order placement
-/// Delivery address is encrypted before submission
+/// Redesigned with clean light theme and warm orange accents
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
 
@@ -13,33 +14,34 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  final _addressController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  void dispose() {
-    _addressController.dispose();
-    _phoneController.dispose();
-    super.dispose();
-  }
+  // Warm orange theme colors
+  static const Color _primaryOrange = Color(0xFFD4A259);
+  static const Color _backgroundColor = Color(0xFFFAF8F5);
+  static const Color _cardColor = Colors.white;
+  static const Color _textDark = Color(0xFF2D2D2D);
+  static const Color _textGrey = Color(0xFF6B6B6B);
+  static const Color _borderColor = Color(0xFFE0E0E0);
 
   Future<void> _placeOrder(BuildContext context) async {
-    if (!_formKey.currentState!.validate()) return;
-
     final viewModel = context.read<MenuViewModel>();
 
+    // For simplified cart, we use a default address
     final success = await viewModel.placeOrder(
-      address: _addressController.text.trim(),
-      phone: _phoneController.text.trim().isNotEmpty
-          ? _phoneController.text.trim()
-          : null,
+      address: 'In-store pickup',
+      phone: null,
     );
 
     if (!context.mounted) return;
 
     if (success) {
-      _showSuccessDialog(context, viewModel.lastOrderId!);
+      // Navigate to order status screen with queue number
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              OrderStatusScreen(queueNumber: viewModel.lastQueueNumber!),
+        ),
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -51,101 +53,26 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
-  void _showSuccessDialog(BuildContext context, String orderId) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF16213E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Column(
-          children: [
-            Icon(Icons.check_circle, size: 64, color: Color(0xFF4CAF50)),
-            SizedBox(height: 16),
-            Text('Order Placed!', style: TextStyle(color: Colors.white)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Your order has been placed successfully.',
-              style: TextStyle(color: Colors.white70),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0F3460),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.receipt_long,
-                    color: Color(0xFFE94560),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      'Order ID: ${orderId.substring(0, orderId.length.clamp(0, 10))}...',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontFamily: 'monospace',
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.lock, size: 14, color: Colors.green),
-                SizedBox(width: 4),
-                Text(
-                  'Address encrypted securely',
-                  style: TextStyle(color: Colors.green, fontSize: 12),
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Close dialog
-              Navigator.of(context).pop(); // Return to menu
-            },
-            child: const Text(
-              'Back to Menu',
-              style: TextStyle(color: Color(0xFFE94560)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: _backgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF16213E),
+        backgroundColor: Colors.white,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios, color: _textDark, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
+        centerTitle: true,
         title: const Text(
-          '🛒 Your Cart',
-          style: TextStyle(color: Colors.white),
+          'Order',
+          style: TextStyle(
+            color: _textDark,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       body: Consumer<MenuViewModel>(
@@ -160,20 +87,35 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildEmptyCart() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.white38),
-          SizedBox(height: 16),
-          Text(
-            'Your cart is empty',
-            style: TextStyle(color: Colors.white70, fontSize: 18),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _primaryOrange.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.shopping_cart_outlined,
+              size: 64,
+              color: _primaryOrange,
+            ),
           ),
-          SizedBox(height: 8),
-          Text(
+          const SizedBox(height: 24),
+          const Text(
+            'Your cart is empty',
+            style: TextStyle(
+              color: _textDark,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
             'Add some delicious items!',
-            style: TextStyle(color: Colors.white38, fontSize: 14),
+            style: TextStyle(color: _textGrey, fontSize: 14),
           ),
         ],
       ),
@@ -181,268 +123,248 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildCartContent(BuildContext context, MenuViewModel viewModel) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Cart Items Section
-              const Text(
-                'Order Items',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+    return Column(
+      children: [
+        // Cart items list
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: viewModel.cartItems.length,
+            itemBuilder: (context, index) {
+              return _CartItemTile(
+                item: viewModel.cartItems[index],
+                primaryOrange: _primaryOrange,
+                cardColor: _cardColor,
+                textDark: _textDark,
+                textGrey: _textGrey,
+                borderColor: _borderColor,
+              );
+            },
+          ),
+        ),
+
+        // Bottom section with summary and button
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
               ),
-              const SizedBox(height: 12),
-              ...viewModel.cartItems.map((item) => _CartItemTile(item: item)),
-
-              const SizedBox(height: 24),
-
-              // Total Section
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF16213E), Color(0xFF0F3460)],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
+            ],
+          ),
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Subtotal row
+                _buildSummaryRow(
+                  'Subtotal:',
+                  '\$${viewModel.cartTotal.toStringAsFixed(2)}',
                 ),
-                child: Row(
+                const SizedBox(height: 8),
+
+                // Tax row
+                _buildSummaryRow(
+                  'Tax:',
+                  '\$${viewModel.cartTax.toStringAsFixed(2)}',
+                ),
+                const SizedBox(height: 12),
+
+                // Divider
+                Container(height: 1, color: _borderColor),
+                const SizedBox(height: 12),
+
+                // Total row
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Total',
+                      'Total:',
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
+                        color: _textDark,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      '\$${viewModel.cartTotal.toStringAsFixed(2)}',
+                      '\$${viewModel.cartGrandTotal.toStringAsFixed(2)}',
                       style: const TextStyle(
-                        color: Color(0xFFE94560),
-                        fontSize: 28,
+                        color: _textDark,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-              ),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
-              // Delivery Address Section (ENCRYPTED)
-              const Row(
-                children: [
-                  Icon(Icons.location_on, color: Color(0xFFE94560), size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Delivery Address',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Icon(Icons.lock, color: Colors.green, size: 16),
-                  SizedBox(width: 4),
-                  Text(
-                    'Encrypted',
-                    style: TextStyle(color: Colors.green, fontSize: 12),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _addressController,
-                style: const TextStyle(color: Colors.white),
-                maxLines: 2,
-                decoration: InputDecoration(
-                  hintText: 'Enter your delivery address...',
-                  hintStyle: const TextStyle(color: Colors.white38),
-                  filled: true,
-                  fillColor: const Color(0xFF16213E),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE94560)),
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.red),
-                  ),
-                  prefixIcon: const Icon(Icons.home, color: Colors.white38),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your delivery address';
-                  }
-                  if (value.trim().length < 10) {
-                    return 'Please enter a valid address';
-                  }
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 16),
-
-              // Phone Number Section (Optional, ENCRYPTED)
-              const Row(
-                children: [
-                  Icon(Icons.phone, color: Color(0xFFE94560), size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Phone Number',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    '(Optional)',
-                    style: TextStyle(color: Colors.white38, fontSize: 12),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _phoneController,
-                style: const TextStyle(color: Colors.white),
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  hintText: 'Enter phone number...',
-                  hintStyle: const TextStyle(color: Colors.white38),
-                  filled: true,
-                  fillColor: const Color(0xFF16213E),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE94560)),
-                  ),
-                  prefixIcon: const Icon(Icons.dialpad, color: Colors.white38),
-                ),
-              ),
-
-              const SizedBox(height: 8),
-              const Text(
-                '🔐 Your address and phone will be encrypted with AES-256 before sending to the server.',
-                style: TextStyle(color: Colors.white38, fontSize: 12),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Place Order Button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: Consumer<MenuViewModel>(
+                // Place Order Button
+                Consumer<MenuViewModel>(
                   builder: (context, vm, child) {
-                    return ElevatedButton(
-                      onPressed: vm.isPlacingOrder
-                          ? null
-                          : () => _placeOrder(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE94560),
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: Colors.grey.shade700,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                    return SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: vm.isPlacingOrder
+                            ? null
+                            : () => _placeOrder(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primaryOrange,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: Colors.grey.shade400,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(27),
+                          ),
+                          elevation: 0,
                         ),
-                        elevation: 4,
+                        child: vm.isPlacingOrder
+                            ? const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Text('Placing Order...'),
+                                ],
+                              )
+                            : const Text(
+                                'PLACE ORDER',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1,
+                                ),
+                              ),
                       ),
-                      child: vm.isPlacingOrder
-                          ? const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                                SizedBox(width: 12),
-                                Text('Placing Order...'),
-                              ],
-                            )
-                          : const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.lock, size: 20),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Place Secure Order',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
                     );
                   },
                 ),
-              ),
 
-              const SizedBox(height: 16),
-            ],
+                const SizedBox(height: 12),
+
+                // Total amount below button
+                Text(
+                  '\$${viewModel.cartGrandTotal.toStringAsFixed(2)}',
+                  style: const TextStyle(color: _textGrey, fontSize: 16),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(color: _textGrey, fontSize: 16)),
+        Text(
+          value,
+          style: const TextStyle(
+            color: _textDark,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 }
 
-/// Cart item tile widget
+/// Cart item tile widget with clean design
 class _CartItemTile extends StatelessWidget {
   final CartItem item;
+  final Color primaryOrange;
+  final Color cardColor;
+  final Color textDark;
+  final Color textGrey;
+  final Color borderColor;
 
-  const _CartItemTile({required this.item});
+  const _CartItemTile({
+    required this.item,
+    required this.primaryOrange,
+    required this.cardColor,
+    required this.textDark,
+    required this.textGrey,
+    required this.borderColor,
+  });
+
+  // Get emoji for food category
+  String _getFoodEmoji(String category, String name) {
+    final nameLower = name.toLowerCase();
+    final categoryLower = category.toLowerCase();
+
+    if (nameLower.contains('burger') || nameLower.contains('cheeseburger')) {
+      return '🍔';
+    } else if (nameLower.contains('pizza') ||
+        nameLower.contains('margherita')) {
+      return '🍕';
+    } else if (nameLower.contains('juice') || nameLower.contains('orange')) {
+      return '🧃';
+    } else if (nameLower.contains('coffee') || nameLower.contains('latte')) {
+      return '☕';
+    } else if (nameLower.contains('salad')) {
+      return '🥗';
+    } else if (nameLower.contains('pasta') || nameLower.contains('spaghetti')) {
+      return '🍝';
+    } else if (nameLower.contains('sandwich')) {
+      return '🥪';
+    } else if (nameLower.contains('chicken') || nameLower.contains('wings')) {
+      return '🍗';
+    } else if (nameLower.contains('fries') || nameLower.contains('fry')) {
+      return '🍟';
+    } else if (nameLower.contains('soda') ||
+        nameLower.contains('cola') ||
+        nameLower.contains('drink')) {
+      return '🥤';
+    } else if (nameLower.contains('ice cream') ||
+        nameLower.contains('dessert')) {
+      return '🍨';
+    } else if (nameLower.contains('cake') || nameLower.contains('brownie')) {
+      return '🍰';
+    } else if (categoryLower.contains('beverage') ||
+        categoryLower.contains('drink')) {
+      return '🥤';
+    } else if (categoryLower.contains('main') ||
+        categoryLower.contains('entree')) {
+      return '🍽️';
+    } else if (categoryLower.contains('dessert') ||
+        categoryLower.contains('sweet')) {
+      return '🍰';
+    }
+    return '🍽️';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final emoji = _getFoodEmoji(item.menuItem.category, item.menuItem.name);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF16213E),
-        borderRadius: BorderRadius.circular(16),
+        color: cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
-          // Item image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              item.menuItem.imageUrl,
-              width: 60,
-              height: 60,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                width: 60,
-                height: 60,
-                color: const Color(0xFF0F3460),
-                child: const Icon(Icons.restaurant, color: Colors.white38),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
+          // Food emoji
+          Text(emoji, style: const TextStyle(fontSize: 36)),
+          const SizedBox(width: 16),
+
           // Item details
           Expanded(
             child: Column(
@@ -450,60 +372,85 @@ class _CartItemTile extends StatelessWidget {
               children: [
                 Text(
                   item.menuItem.name,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: textDark,
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '\$${item.menuItem.price.toStringAsFixed(2)} each',
-                  style: const TextStyle(color: Colors.white60, fontSize: 12),
+                  '\$${item.menuItem.price.toStringAsFixed(2)}',
+                  style: TextStyle(color: textGrey, fontSize: 14),
                 ),
               ],
             ),
           ),
+
           // Quantity controls
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              IconButton(
-                icon: const Icon(Icons.remove_circle_outline),
-                color: Colors.white60,
-                iconSize: 28,
-                onPressed: () {
+              // Decrease button
+              _buildQuantityButton(
+                context,
+                icon: Icons.remove,
+                onTap: () {
                   context.read<MenuViewModel>().decreaseQuantity(item);
                 },
               ),
+
+              // Quantity display
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
+                width: 40,
+                height: 36,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0F3460),
-                  borderRadius: BorderRadius.circular(8),
+                  border: Border.symmetric(
+                    horizontal: BorderSide(color: borderColor),
+                  ),
                 ),
                 child: Text(
                   '${item.quantity}',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: textDark,
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.add_circle_outline),
-                color: const Color(0xFFE94560),
-                iconSize: 28,
-                onPressed: () {
+
+              // Increase button
+              _buildQuantityButton(
+                context,
+                icon: Icons.add,
+                onTap: () {
                   context.read<MenuViewModel>().increaseQuantity(item);
                 },
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuantityButton(
+    BuildContext context, {
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          border: Border.all(color: borderColor),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Icon(icon, size: 18, color: textGrey),
       ),
     );
   }

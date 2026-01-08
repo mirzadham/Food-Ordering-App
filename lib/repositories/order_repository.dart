@@ -26,8 +26,8 @@ class OrderRepository {
   /// [address] - Delivery address (will be encrypted before sending)
   /// [phone] - Phone number (optional, will be encrypted if provided)
   ///
-  /// Returns the order ID on success
-  Future<String> placeOrder({
+  /// Returns a record containing orderId and queueNumber on success
+  Future<({String orderId, int queueNumber})> placeOrder({
     required List<CartItem> items,
     required double total,
     required String address,
@@ -58,12 +58,18 @@ class OrderRepository {
     }
 
     final orderId = response.data?['orderId'] as String?;
+    final queueNumber = response.data?['queueNumber'] as int?;
+
     if (orderId == null) {
       throw Exception('No order ID received from server');
     }
 
-    print('✅ Order placed successfully: $orderId');
-    return orderId;
+    if (queueNumber == null) {
+      throw Exception('No queue number received from server');
+    }
+
+    print('✅ Order placed successfully: $orderId (Queue #$queueNumber)');
+    return (orderId: orderId, queueNumber: queueNumber);
   }
 
   /// Fetches user's order history from the backend

@@ -5,6 +5,7 @@ class MenuItem {
   final String description;
   final double price;
   final String imageUrl;
+  final String category;
 
   MenuItem({
     required this.id,
@@ -12,6 +13,7 @@ class MenuItem {
     required this.description,
     required this.price,
     required this.imageUrl,
+    required this.category,
   });
 
   /// Creates a MenuItem from JSON data
@@ -22,6 +24,7 @@ class MenuItem {
       description: json['description'] ?? '',
       price: (json['price'] ?? 0).toDouble(),
       imageUrl: json['imageUrl'] ?? '',
+      category: json['category'] ?? 'Other',
     );
   }
 
@@ -33,11 +36,12 @@ class MenuItem {
       'description': description,
       'price': price,
       'imageUrl': imageUrl,
+      'category': category,
     };
   }
 
   @override
   String toString() {
-    return 'MenuItem(id: $id, name: $name, price: \$$price)';
+    return 'MenuItem(id: $id, name: $name, category: $category, price: \$$price)';
   }
 }

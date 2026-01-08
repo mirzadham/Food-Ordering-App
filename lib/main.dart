@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'viewmodels/menu_viewmodel.dart';
-import 'views/menu_screen.dart';
+import 'views/welcome_screen.dart';
 import 'utils/encryption_helper.dart';
 
 void main() async {
@@ -13,6 +13,18 @@ void main() async {
   // Initialize Firebase with platform-specific options
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // Sign out any existing user to ensure fresh start on app load
+  await FirebaseAuth.instance.signOut();
+  // Small delay to ensure auth state propagates
+  await Future.delayed(const Duration(milliseconds: 500));
+
+  if (FirebaseAuth.instance.currentUser == null) {
+    print('✅ Confirmed: User is signed out');
+  } else {
+    print('⚠️ Warning: User might still be signed in');
+  }
+  print('🔄 App started fresh - user signed out');
+
   // Validate encryption is working
   if (EncryptionHelper.validateEncryption()) {
     print('✅ AES-256 Encryption validated successfully');
@@ -20,30 +32,7 @@ void main() async {
     print('❌ Encryption validation failed');
   }
 
-  // Sign in anonymously for authentication
-  await _signInAnonymously();
-
   runApp(const FoodOrderingApp());
-}
-
-/// Signs in the user anonymously using Firebase Auth
-Future<void> _signInAnonymously() async {
-  try {
-    final auth = FirebaseAuth.instance;
-
-    // Check if already signed in
-    if (auth.currentUser != null) {
-      print('✅ Already signed in: ${auth.currentUser!.uid}');
-      return;
-    }
-
-    // Sign in anonymously
-    final userCredential = await auth.signInAnonymously();
-    print('✅ Signed in anonymously: ${userCredential.user!.uid}');
-  } catch (e) {
-    print('⚠️ Anonymous sign-in failed: $e');
-    // Continue anyway - authentication will fail on API calls
-  }
 }
 
 /// Main Food Ordering Application
@@ -55,18 +44,30 @@ class FoodOrderingApp extends StatelessWidget {
     return MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => MenuViewModel())],
       child: MaterialApp(
-        title: 'Food Ordering App',
+        title: 'UPM Cafe',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFFE94560),
-            brightness: Brightness.dark,
+            seedColor: const Color(0xFFE8A849),
+            brightness: Brightness.light,
           ),
           useMaterial3: true,
           fontFamily: 'Roboto',
         ),
-        home: const MenuScreen(),
+        home: const AuthWrapper(),
       ),
     );
+  }
+}
+
+/// Auth Wrapper - Always shows WelcomeScreen first
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Always show WelcomeScreen first
+    // Authentication check happens when user clicks "Order Now"
+    return WelcomeScreen();
   }
 }

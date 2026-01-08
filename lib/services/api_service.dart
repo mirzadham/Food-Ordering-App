@@ -28,6 +28,9 @@ class ApiService {
   /// Creates headers with Authorization Bearer token
   Future<Map<String, String>> _getAuthHeaders() async {
     final token = await _getIdToken();
+    if (token == null) {
+      print('⚠️ Warning: No auth token available for API request');
+    }
     return {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',

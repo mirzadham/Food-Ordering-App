@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/menu_item.dart';
 import '../models/order.dart';
 import '../repositories/order_repository.dart';
@@ -20,6 +21,7 @@ class MenuViewModel extends ChangeNotifier {
   bool _isPlacingOrder = false;
   String? _orderError;
   String? _lastOrderId;
+  int? _lastQueueNumber;
 
   // Getters
   List<MenuItem> get menuItems => _menuItems;
@@ -33,15 +35,29 @@ class MenuViewModel extends ChangeNotifier {
       _cartItems.fold(0.0, (sum, item) => sum + item.totalPrice);
   bool get isCartEmpty => _cartItems.isEmpty;
 
+  // Tax calculation (approximately 7.33% based on mockup design)
+  static const double taxRate = 0.0733;
+  double get cartTax => cartTotal * taxRate;
+  double get cartGrandTotal => cartTotal + cartTax;
+
   bool get isPlacingOrder => _isPlacingOrder;
   String? get orderError => _orderError;
   String? get lastOrderId => _lastOrderId;
+  int? get lastQueueNumber => _lastQueueNumber;
 
   /// Fetches menu items from the backend
   Future<void> fetchMenu() async {
     _isLoadingMenu = true;
     _menuError = null;
     notifyListeners();
+
+    // Verify authentication before making request
+    if (FirebaseAuth.instance.currentUser == null) {
+      _isLoadingMenu = false;
+      _menuError = 'Please sign in to view the menu';
+      notifyListeners();
+      return;
+    }
 
     try {
       _menuItems = await _repository.fetchMenu();
@@ -120,17 +136,19 @@ class MenuViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _lastOrderId = await _repository.placeOrder(
+      final result = await _repository.placeOrder(
         items: _cartItems,
         total: cartTotal,
         address: address,
         phone: phone,
       );
 
-      // Clear cart after successful order
+      // Use server-provided queue number and clear cart
+      _lastOrderId = result.orderId;
+      _lastQueueNumber = result.queueNumber;
       _cartItems.clear();
 
-      print('✅ Order placed: $_lastOrderId');
+      print('✅ Order placed: $_lastOrderId (Queue #$_lastQueueNumber)');
       return true;
     } catch (e) {
       _orderError = e.toString();
