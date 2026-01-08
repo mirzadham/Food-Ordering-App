@@ -117,7 +117,7 @@ class _MenuScreenState extends State<MenuScreen> {
     return Consumer<MenuViewModel>(
       builder: (context, viewModel, child) {
         if (viewModel.isLoadingMenu) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

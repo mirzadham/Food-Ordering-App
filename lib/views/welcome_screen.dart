@@ -204,7 +204,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           color: const Color(0xFF8B7355),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Column(
+                        child: Column(
                           children: [
                             Text(
                               'MENU',

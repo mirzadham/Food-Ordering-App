@@ -339,7 +339,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
 
                     // Face
-                    const Center(
+                    Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

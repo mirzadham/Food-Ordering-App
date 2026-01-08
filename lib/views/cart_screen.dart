@@ -94,7 +94,7 @@ class _CartScreenState extends State<CartScreen> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: _primaryOrange.withValues(alpha: 0.1),
+              color: _primaryOrange.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -150,7 +150,7 @@ class _CartScreenState extends State<CartScreen> {
             color: Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: Colors.black.withOpacity(0.05),
                 blurRadius: 10,
                 offset: const Offset(0, -2),
               ),
@@ -222,7 +222,7 @@ class _CartScreenState extends State<CartScreen> {
                           elevation: 0,
                         ),
                         child: vm.isPlacingOrder
-                            ? const Row(
+                            ? Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   SizedBox(
@@ -357,7 +357,7 @@ class _CartItemTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor.withValues(alpha: 0.5)),
+        border: Border.all(color: borderColor.withOpacity(0.5)),
       ),
       child: Row(
         children: [
