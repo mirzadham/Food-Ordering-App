@@ -90,3 +90,5 @@ class OrderPlacementResult {
     required this.queueNumber,
   });
 
+
+}
